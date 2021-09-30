@@ -39,6 +39,10 @@
             <td class="value"> <%= booking&.check_out_date&.strftime("%d %b %y")%> <td>
         </tr>
         <tr>
+            <td class="key">Rooms Alloted: <td>
+            <td class="value"> <%= booking.rooms.pluck(:number).join(", ")  %> <td>
+        </tr>
+        <tr>
         	<td class="key">Room Charges: <td>
             <td class="value"> Rs. <%= booking.total_room_charges%> <td>
         </tr>
@@ -94,6 +98,10 @@
         <tr>
         	<td class="key">Check out Date: <td>
             <td class="value"> <%= booking&.check_out_date&.strftime("%d %b %y")%> <td>
+        </tr>
+        <tr>
+            <td class="key">Rooms Alloted: <td>
+            <td class="value"> <%= booking.rooms.pluck(:number).join(", ") %> <td>
         </tr>
         <tr>
         	<td class="key">Room Charges: <td>

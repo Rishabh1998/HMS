@@ -53,7 +53,9 @@ ActiveAdmin.register Room, as: 'Room' do
         f.input :status
         f.input :description
         f.object.room_pictures << RoomPicture.new if f.object.status == "need_cleaning" and f.object.room_pictures.where(verified: false).empty?
-        if !f.object.room_pictures.where(verified: false).empty?
+        puts(f.object.room_pictures)
+        if f.object.room_pictures.pluck(:verified).include? false
+
           f.has_many :room_pictures, id: "room_pictures#{current_admin_user.role.name == "Admin"? "admin" : ""}" do |room_picture|
             if room_picture.object.verified == false
               room_picture.input :washroom_image, :as => :file, :hint => room_picture.object.washroom_image.present? ?  image_tag(room_picture.object.washroom_image.url, style: "width: 350px")  : '', :input_html => {accept: "image/*", capture: '', id: 'washroom_image'}, required: true

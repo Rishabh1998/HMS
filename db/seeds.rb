@@ -6,4 +6,9 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 Role.find_or_create_by!(name: "Admin")
-AdminUser.create!(email: 'admin@example.com', password: 'password', password_confirmation: 'password', role_id: 1)
+# AdminUser.create!(email: 'admin@example.com', password: 'password', password_confirmation: 'password', role_id: 1)
+
+payments = Payment.where(paid_at: nil)
+payments.each do |p|
+    p.update(paid_at: p.created_at)
+end

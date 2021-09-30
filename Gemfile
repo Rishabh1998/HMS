@@ -69,3 +69,5 @@ gem 'wkhtmltopdf-binary'
 gem "aws-sdk-s3"
 gem 'carrierwave'
 gem "fog-aws"
+gem 'httparty'
+gem 'whenever'

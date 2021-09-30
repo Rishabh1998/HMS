@@ -81,9 +81,9 @@ $( document ).ready(function() {
     //             document.getElementsByClassName('room_pictures')[0].style.display = "none";
     //     }
     // }
-    if (update_room != null && room_state_text != "Ready"){
-        update_room.childNodes[0].setAttribute("disabled", "");
-    }
+    // if (update_room != null && room_state_text != "Ready"){
+    //     update_room.childNodes[0].setAttribute("disabled", "");
+    // }
 
     $( "#washroom_image" ).change(function() {
         washroom = document.getElementById('washroom_image').value;

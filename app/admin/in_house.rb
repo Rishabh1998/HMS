@@ -1,6 +1,6 @@
 ActiveAdmin.register Booking, as: 'In House Guests' do
 
-    permit_params :status, :check_out_date, :check_in_date, :extension_charges, room_ids: [], menu_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]
+    permit_params :status, :check_out_date, :check_in_date, :extension_charges, room_ids: [], menu_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, :quantity, payments_attributes: [:id, :payment_mode, :payment_type, :checkout_flag, :amount]]
     
     actions :all, except: [:destroy, :new]
     menu :parent => "Bookings", :priority => 1
@@ -30,7 +30,7 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
       before_action :cleanup, only: :index
 
       def update
-        resource.update(params["booking"].permit(:status, :check_out_date, :extension_charges, room_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]))
+        resource.update(params["booking"].permit(:status, :check_out_date, :extension_charges, room_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, :quantity, payments_attributes: [:id, :payment_mode, :payment_type, :checkout_flag, :amount]]))
         if resource.status == "checkout"
           pdf = render_to_string pdf: "receipt"+resource.id.to_s, template: "admin/booking/checkout_receipt.pdf.erb", page_height: '210', page_width: '58', margin:  {top: 10, bottom: 0, left: 3, right: 0}, encoding: "UTF-8"
 
@@ -51,6 +51,14 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
       
       def scoped_collection
         super.checkin
+      end
+
+      def edit
+        redirect_to admin_checkout_path(params[:id]) if Booking.find(params[:id]).status == "checkout"
+      end
+
+      def show
+        redirect_to admin_checkout_path(params[:id]) if Booking.find(params[:id]).status == "checkout"
       end
     end
 
@@ -93,6 +101,7 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
         f.has_many :booking_menus, new_record: params["status"] != "checkout" do |menu|
           if params["status"] != 'checkout'
             menu.input :menu_id, as: :select, :collection => Menu.all.collect{|m| [m.name, m.id]}
+            menu.input :quantity, :input_html => {disabled: menu.object.id.present?}
             menu.object.payments << Payment.new(payment_type: 'food') if menu.object.payments.empty?
             menu.has_many :payments, heading: false, allow_remove: false, new_record: false do |payment|
               payment.input :payment_mode
@@ -101,10 +110,12 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
             end
           elsif menu.object.payments.first&.payment_mode == "unpaid"
             menu.input :menu_id, as: :select, :collection => Menu.all.collect{|m| [m.name, m.id]}
+            menu.input :quantity, :input_html => {disabled: menu.object.id.present?}
             # menu.object.payments << Payment.new(payment_type: 'food') if menu.object.payments.empty?
             menu.has_many :payments, heading: false, new_record: false do |payment|
               payment.input :payment_mode
               payment.input :payment_type, :input_html => {value: 'food'}, as: :hidden
+              payment.input :checkout_flag, :input_html => {value: true}, as: :hidden
                 # payment.input :amount, label: 'Advance Payment'
             end
           end
@@ -118,6 +129,7 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
               payment.input :payment_mode, label: 'Payment Mode'
               payment.input :amount, label: 'Payment Amount', :input_html => {value: f.object.pending_room_charges}, as: :hidden
               payment.input :payment_type, :input_html => {value: 'checkout'}, as: :hidden
+              payment.input :checkout_flag, :input_html => {value: true}, as: :hidden
             end
           end
         else 
