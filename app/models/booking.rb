@@ -7,13 +7,13 @@ class Booking < ApplicationRecord
     enum booking_type: {'walkin': 1, 'oyo': 2}
 
     belongs_to :customer
-    has_many :booking_rooms
+    has_many :booking_rooms, dependent: :destroy
     has_many :rooms, through: :booking_rooms
-    has_many :booking_guests
+    has_many :booking_guests, dependent: :destroy
     has_many :guests, through: :booking_guests
-    has_many :booking_menus
+    has_many :booking_menus, dependent: :destroy
     has_many :menus, through: :booking_menus
-    has_many :payments, as: :objectable
+    has_many :payments, as: :objectable, dependent: :destroy
 
     accepts_nested_attributes_for :rooms
     accepts_nested_attributes_for :guests
@@ -25,8 +25,8 @@ class Booking < ApplicationRecord
     after_update :reduce_inventory, :if => Proc.new {|booking| booking.status == "checkout"}
 
     def change_status
-        self.checked_in_time = Time.now if self.status_changed? and self.status == 'checkin'
-        self.checked_out_time = Time.now if self.status_changed? and self.status == 'checkout'
+        self.checked_in_time = Time.zone.now if self.status_changed? and self.status == 'checkin'
+        self.checked_out_time = Time.zone.now if self.status_changed? and self.status == 'checkout'
     end
 
     def reduce_inventory
@@ -47,7 +47,7 @@ class Booking < ApplicationRecord
     end
 
     def total_menu_price
-        self&.menus&.sum(:price)
+        self&.menus&.sum('price * quantity')
     end
 
     def total_room_charges
@@ -102,7 +102,7 @@ class Booking < ApplicationRecord
         amount = 0
         if self.status == "checkout"
             self.booking_menus.each do |booking_menu|
-                amount += booking_menu.payments.where('? > updated_at and ? < updated_at', self.updated_at + 2.minute, self.updated_at - 2.minute)&.sum(:amount)
+                amount += booking_menu.payments.where(checkout_flag: true)&.sum(:amount)
             end
         end
         amount

@@ -11,5 +11,6 @@ Rails.application.routes.draw do
       end
     end
   end
-
+  
+  get "/healthcheck", to: proc { [200, {}, ["Ok"]] }
 end

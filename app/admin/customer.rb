@@ -41,7 +41,7 @@ ActiveAdmin.register Customer, as: 'Customer' do
         f.input :phone_number, label: 'Phone Number'
         # f.input :image, label: "Id proof", :as => :file, :hint => f.object.image.present? ? image_tag(rails_blob_url(f.object.image), :size => 150) : ""
 
-          f.input :image, as: :file, :hint => f.object.image.present? ?  image_tag(f.object.image.url, style: "width: 350px")  : ''
+          f.input :image, label: "Id proof", as: :file, :hint => f.object.image.present? ?  image_tag(f.object.image.url, style: "width: 350px")  : ''
         f.object.bookings << Booking.new
         object_booking = f.object.bookings.last
         old_guests = f.object.guests

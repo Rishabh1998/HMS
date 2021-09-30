@@ -13,6 +13,15 @@
 @import "arctic_admin/base";
 
 
+.div-box{
+  padding: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 0 1px #000 inset;
+  margin-bottom: 20px;
+}
+
+.panel_contents{
+  font-size: 30px;
+}
 .edit_link {
   font-size: 0;
 }
@@ -20,10 +29,6 @@
 .edit_link:after {
     font-size: 16px;
     content: 'Update';
-}
-
-.col{
-  font-size: 16px;
 }
 
 input[type='checkbox']:checked {
@@ -121,4 +126,19 @@ ol > li.has_many_container.payments > fieldset > ol > li > .has_many_remove{
   margin: 0;
   opacity: 1;
   transition: 0s
+}
+
+.col {
+  font-size: 20px;
+}
+
+th {
+  text-align: left;
+  font-size: 24px;
+  padding-left: 10px;
+  background: #a7d7f5;
+}
+
+tbody tr th {
+    font-size: 24px;
 }
