@@ -1,10 +1,9 @@
-ActiveAdmin.register Booking, as: 'Bookings' do
+ActiveAdmin.register Booking, as: 'Checkout' do
 
-    permit_params :status, :room_price_per_day, :check_out_date, :check_in_date, :payment_status, room_ids: [], menu_ids: [], booking_menus_attributes: [:id, :menu_id]
-
-    actions :all, except: [:destroy]
-    menu :parent => "Bookings", :priority => 1
-
+    permit_params :status, :room_price_per_day, :check_out_date, :check_in_date, :payment_status, room_ids: []
+    
+    actions :all, except: [:new, :destroy]
+    menu :parent => "Bookings", :priority => 2
 
     member_action :no_show, method: :put do
       Booking.find(params[:id]).update(status: 'no_show')
@@ -12,27 +11,8 @@ ActiveAdmin.register Booking, as: 'Bookings' do
     end
 
     controller do
-      before_action :cleanup, only: :index
-
-      def new
-        redirect_to new_admin_customer_path
-      end
-
-      def cleanup
-        Booking.where(check_in_date: nil).delete_all
-      end
-      
-      def update
-        resource.update(params["booking"].permit(:status, :room_price_per_day, :check_out_date, :check_in_date, :payment_status, room_ids: [], booking_menus_attributes: [:id, :menu_id]))
-        if resource.status == 'checkin'
-          redirect_to admin_in_house_guest_path(params[:id])
-        else
-          redirect_to admin_booking_path(params[:id])
-        end
-      end
-
       def scoped_collection
-        super.booked
+        super.checkout
       end
     end
 
@@ -75,9 +55,6 @@ ActiveAdmin.register Booking, as: 'Bookings' do
         f.input :status, :input_html => { :id => "booking_status" }
         f.input :room_ids, label: 'Allot Rooms', as: :select, :collection => rooms.collect {|room| [room.number, room.id] }, multiple: true
         f.input :payment_status
-        f.has_many :booking_menus do |menu|
-          menu.input :menu_id, as: :select, :collection => Menu.all.collect{|m| [m.name, m.id]}
-        end
       end
       actions
     end
