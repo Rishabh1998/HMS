@@ -1,6 +1,6 @@
 ActiveAdmin.register Customer, as: 'Customer' do
 
-    permit_params :name, :email, :phone_number, :image, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_charges, :advance_payment, :advance_payment_mode, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name]]
+    permit_params :name, :email, :phone_number, :image, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_charges, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name, :image], payments_attributes: [:id, :payment_mode, :payment_type, :amount]]
 
     actions :all, except: [:destroy]
     controller do
@@ -12,7 +12,7 @@ ActiveAdmin.register Customer, as: 'Customer' do
 
       private
       def customer_params
-        params["customer"].permit(:email, :phone_number, :name, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_charges, :advance_payment, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name]])
+        params["customer"].permit(:email, :phone_number, :name, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_charges, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name, :image], payments_attributes: [:id, :payment_mode, :payment_type, :amount]])
       end
     end
 
@@ -49,8 +49,11 @@ ActiveAdmin.register Customer, as: 'Customer' do
             booking.input :check_in_date, as: :datepicker, input_html: {autocomplete: "off"}
             booking.input :check_out_date, as: :datepicker, input_html: {autocomplete: "off"}
             booking.input :room_charges
-            booking.input :advance_payment
-            booking.input :advance_payment_mode
+            booking.object.payments << Payment.new(payment_type: 'advance') if booking.object.payments.empty?
+            booking.has_many :payments, allow_remove: false, new_record: false do |payment|
+              payment.input :payment_mode, label: 'Advance Payment Mode'
+              payment.input :amount, label: 'Advance Payment'
+            end
             booking.input :booking_guest_ids, as: :select, :collection => old_guests.pluck(:name, :id), multiple: true if old_guests.present?
             # booking.input :room_ids, as: :select, :collection => Room.all.collect {|room| [room.number, room.id] }, multiple: true
             booking.has_many :guests do |guest|
@@ -65,6 +68,36 @@ ActiveAdmin.register Customer, as: 'Customer' do
         f.cancel_link({action: "index"})
       end
     end
+
+    show do |object|
+      attributes_table do
+        row :name
+        row :phone_number
+        row :email
+        row 'Id Proof' do 
+          object.image.present? ? image_tag(rails_blob_url(object.image), :size => 150) : ""
+        end
+        if object.guests.present?
+          div class: 'guests' do 
+            h3 'Guests'
+            div class: 'guests_table' do 
+              table class: 'table' do 
+                tr do
+                  th 'Name'
+                  th 'ID Proof'
+                end
+              object.guests.each do |guest|
+                  tr do 
+                    td guest.name
+                    td guest.image.present? ? image_tag(rails_blob_url(guest.image), :size => 150) : ""
+                  end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
     
 end
 
