@@ -12,7 +12,22 @@
 @import 'activeadmin_addons/all';
 @import "arctic_admin/base";
 
-#new_customer > fieldset.inputs > ol > li.has_many_container.bookings > fieldset > ol > li:nth-child(6) > a {
+.col{
+  font-size: 16px;
+}
+
+input[type='checkbox'] {
+  background: red;
+  padding: 10px;
+}
+
+input[type='checkbox']:checked {
+  background: green;
+  padding: 10px;
+}
+
+
+#new_customer > fieldset.inputs > ol > li.has_many_container.bookings > fieldset > ol > li:nth-child(7) > a {
     display: none;
   }
 
@@ -30,6 +45,27 @@
 
 #room_status_verification{
   background-color: #d44f27;
+}
+
+.custom_buttons{
+  margin: 0 20px 0 0;
+  padding: 10px 0px 10px 0px;
+}
+
+.green {
+  background-color: #4a9c4a;
+}
+
+.yellow{
+  background-color: #cec442;
+}
+
+.red{
+  background-color: #dd2828;
+}
+
+.blue{
+  background-color: #3f5dc0;
 }
 
 .button {

@@ -4,5 +4,9 @@ class RoomPicture < ApplicationRecord
     has_one_attached :room_image, :dependent => :destroy
     has_one_attached :laundry, :dependent => :destroy
 
+    validates_presence_of :washroom_image
+    validates_presence_of :room_image
+    validates_presence_of :laundry
+
     has_many_attached :additional_images, :dependent => :destroy
 end

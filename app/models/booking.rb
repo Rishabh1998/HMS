@@ -1,7 +1,8 @@
 class Booking < ApplicationRecord
 
     enum status: {'booked': 1, 'checkin': 2, 'checkout': 3, 'no_show': 4}
-    enum payment_status: {'unpaid': 1, 'google_pay': 2, 'phonepe': 3, 'card': 4, 'cash': 5, 'partially_paid': 6}
+    enum advance_payment_mode: {'unpaid': 1, 'google_pay': 2, 'phonepe': 3, 'card': 4, 'cash': 5, 'oyo_paid': 6}
+
     belongs_to :customer
     has_many :booking_rooms
     has_many :rooms, through: :booking_rooms
@@ -16,12 +17,7 @@ class Booking < ApplicationRecord
     accepts_nested_attributes_for :booking_menus
 
     before_update :change_room_status
-    before_update :check_advance_payment
     before_update :change_status
-
-    def check_advance_payment
-        self.payment_status = 'partially_paid' if self.advance_payment.present?
-    end
 
     def change_status
         self.checked_in_time = Time.now if self.status_changed? and self.status == 'checkin'
@@ -36,9 +32,7 @@ class Booking < ApplicationRecord
     end
 
     def total_room_price
-        checkout = self.status == 'checkout' ? self.checked_out_time.to_date : self.check_out_date.to_date
-        checkin = self.status == 'checkout' ? self.checked_in_time.to_date : self.check_in_date.to_date
-        (self.room_price_per_day || 0) * (checkout - checkin).to_i * (self.room_ids.present? ? self.room_ids.count : 1)
+        self.room_charges
     end
 
     def total_menu_price

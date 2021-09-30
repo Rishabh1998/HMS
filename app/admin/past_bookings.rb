@@ -1,6 +1,6 @@
 ActiveAdmin.register Booking, as: 'Checkout' do
 
-    permit_params :status, :room_price_per_day, :check_out_date, :check_in_date, :payment_status, room_ids: []
+    permit_params :status, :room_charges, :check_out_date, :check_in_date, room_ids: []
     
     actions :all, except: [:new, :destroy]
     menu :parent => "Bookings", :priority => 2
@@ -8,6 +8,22 @@ ActiveAdmin.register Booking, as: 'Checkout' do
     member_action :no_show, method: :put do
       Booking.find(params[:id]).update(status: 'no_show')
       redirect_to admin_bookings_path
+    end
+
+    action_item only: :index do
+      link_to 'Booking', admin_bookings_path, class: 'custom_buttons button green'
+    end
+
+    action_item only: :index do
+      link_to 'In House', admin_in_house_guests_path, class: 'custom_buttons button yellow'
+    end
+
+    action_item only: :index do
+      link_to 'Checkout', admin_checkouts_path, class: 'custom_buttons button red'
+    end
+
+    action_item only: :index do
+      link_to 'Rooms', admin_rooms_path, class: 'custom_buttons button blue'
     end
 
     controller do
@@ -27,11 +43,10 @@ ActiveAdmin.register Booking, as: 'Checkout' do
         object.check_out_date.strftime("%d %B %Y") unless object.check_out_date.nil?
       end
       column :status
-      column :payment_status
       column :rooms do |object|
         object.rooms.pluck(:number)
       end
-      column :room_price_per_day
+      column :room_charges
   
       column :actions do |object|
         object.status_before_type_cast < 3 ? (link_to "#{Booking.statuses.key(object.status_before_type_cast + 1).humanize}", edit_admin_booking_path(object, status: Booking.statuses.key(object.status_before_type_cast + 1)), {:class=>"button button-true" }) : ""
@@ -44,7 +59,6 @@ ActiveAdmin.register Booking, as: 'Checkout' do
   
     filter :check_in_date
     filter :status
-    filter :payment_status
     filter :room
     filter :customer
 
@@ -54,7 +68,6 @@ ActiveAdmin.register Booking, as: 'Checkout' do
         rooms = ready_rooms.or(Room.where(id: f.object.room_ids))
         f.input :status, :input_html => { :id => "booking_status" }
         f.input :room_ids, label: 'Allot Rooms', as: :select, :collection => rooms.collect {|room| [room.number, room.id] }, multiple: true
-        f.input :payment_status
       end
       actions
     end
@@ -67,9 +80,9 @@ ActiveAdmin.register Booking, as: 'Checkout' do
         row :customer
         row :checked_in_time
         row :checked_out_time
-        row :payment_status
         row :advance_payment
-        row :room_price_per_day
+        row :advance_payment_mode
+        row :room_charges
         row :total_room_price
         row :total_menu_price
         row :total_price

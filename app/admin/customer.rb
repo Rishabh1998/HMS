@@ -1,6 +1,6 @@
 ActiveAdmin.register Customer, as: 'Customer' do
 
-    permit_params :name, :email, :phone_number, :image, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_price_per_day, :advance_payment, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name]]
+    permit_params :name, :email, :phone_number, :image, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_charges, :advance_payment, :advance_payment_mode, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name]]
 
     actions :all, except: [:destroy]
     controller do
@@ -12,7 +12,7 @@ ActiveAdmin.register Customer, as: 'Customer' do
 
       private
       def customer_params
-        params["customer"].permit(:email, :phone_number, :name, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_price_per_day, :advance_payment, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name]])
+        params["customer"].permit(:email, :phone_number, :name, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_charges, :advance_payment, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name]])
       end
     end
 
@@ -48,8 +48,9 @@ ActiveAdmin.register Customer, as: 'Customer' do
           if object_booking.nil? or booking.object.id == object_booking.id
             booking.input :check_in_date, as: :datepicker, input_html: {autocomplete: "off"}
             booking.input :check_out_date, as: :datepicker, input_html: {autocomplete: "off"}
-            booking.input :room_price_per_day
+            booking.input :room_charges
             booking.input :advance_payment
+            booking.input :advance_payment_mode
             booking.input :booking_guest_ids, as: :select, :collection => old_guests.pluck(:name, :id), multiple: true if old_guests.present?
             # booking.input :room_ids, as: :select, :collection => Room.all.collect {|room| [room.number, room.id] }, multiple: true
             booking.has_many :guests do |guest|
@@ -59,10 +60,12 @@ ActiveAdmin.register Customer, as: 'Customer' do
           end
         end
       end
-      
-      actions
+      f.actions do
+        f.action :submit, as: :input, label: 'Create Booking'
+        f.cancel_link({action: "index"})
+      end
     end
-
+    
 end
 
   
