@@ -6,7 +6,7 @@ class Ability
     can :manage, ActiveAdmin::Page
     if (user.role.present? && user.role.name.downcase == 'admin')
       can :manage, :all
-    elsif user.role.present?
+    else
       # can :read, :all
       # can :manage, AdminUser, :id => user.id
       user.role.permissions.each do |permission|
