@@ -1,6 +1,6 @@
 ActiveAdmin.register Booking, as: 'In House Guests' do
 
-    permit_params :status, :check_out_date, :check_in_date, room_ids: [], menu_ids: [], booking_menus_attributes: [:id, :menu_id, :payment_status, :payment_mode]
+    permit_params :status, :check_out_date, :check_in_date, :extension_charges, room_ids: [], menu_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]
     
     actions :all, except: [:destroy, :new]
     menu :parent => "Bookings", :priority => 1
@@ -30,9 +30,16 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
       before_action :cleanup, only: :index
 
       def update
-        resource.update(params["booking"].permit(:status, room_ids: [], booking_menus_attributes: [:id, :menu_id, :payment_mode, :payment_status]))
+        resource.update(params["booking"].permit(:status, :check_out_date, :extension_charges, room_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]))
         if resource.status == "checkout"
-          redirect_to admin_checkout_path(params[:id])
+          pdf = render_to_string pdf: "receipt"+resource.id.to_s, template: "admin/booking/checkout_receipt.pdf.erb", page_height: '210', page_width: '58', margin:  {top: 10, bottom: 0, left: 3, right: 0}, encoding: "UTF-8"
+
+          # then save to a file
+          save_path = Rails.root.join('public/pdfs','filename.pdf')
+          File.open(save_path, 'wb') do |file|
+            file << pdf
+          end
+          redirect_to admin_checkout_path(params[:id], checkout_receipt_id: resource.id)
         else
           redirect_to admin_in_house_guest_path(params[:id])
         end
@@ -80,10 +87,47 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
         rooms = ready_rooms.or(Room.where(id: f.object.room_ids))
         f.input :status, :input_html => { :id => "booking_status" }
         f.input :room_ids, label: 'Allot Rooms', as: :select, :collection => rooms.collect {|room| [room.number, room.id] }, multiple: true
-        f.has_many :booking_menus do |menu|
-          menu.input :menu_id, as: :select, :collection => Menu.all.collect{|m| [m.name, m.id]}
-          menu.input :payment_status
-          menu.input :payment_mode
+        f.has_many :booking_menus, new_record: params["status"] != "checkout" do |menu|
+          if params["status"] != 'checkout'
+            menu.input :menu_id, as: :select, :collection => Menu.all.collect{|m| [m.name, m.id]}
+            menu.object.payments << Payment.new(payment_type: 'food') if menu.object.payments.empty?
+            menu.has_many :payments, heading: false, allow_remove: false, new_record: false do |payment|
+              payment.input :payment_mode
+              payment.input :payment_type, :input_html => {value: 'food'}, as: :hidden
+                # payment.input :amount, label: 'Advance Payment'
+            end
+          elsif menu.object.payments.first&.payment_mode == "unpaid"
+            menu.input :menu_id, as: :select, :collection => Menu.all.collect{|m| [m.name, m.id]}
+            # menu.object.payments << Payment.new(payment_type: 'food') if menu.object.payments.empty?
+            menu.has_many :payments, heading: false, new_record: false do |payment|
+              payment.input :payment_mode
+              payment.input :payment_type, :input_html => {value: 'food'}, as: :hidden
+                # payment.input :amount, label: 'Advance Payment'
+            end
+          end
+        end
+        if params["status"] == "checkout"
+          h3 'Pending Payment'
+          f.object.payments << Payment.new(payment_type: 'checkout') if f.object.payments.where(payment_type: 'checkout').empty?
+          f.has_many :payments, heading: false, allow_remove: false, new_record: false do |payment|
+            if payment.object.payment_type == "checkout"
+              h3 "Rs. " + f.object.total_pending_charges.to_s
+              payment.input :payment_mode, label: 'Payment Mode'
+              payment.input :amount, label: 'Payment Amount', :input_html => {value: f.object.pending_room_charges}, as: :hidden
+              payment.input :payment_type, :input_html => {value: 'checkout'}, as: :hidden
+            end
+          end
+        else 
+          f.input :check_out_date, label: 'Extend Current Checkout Date', as: :datepicker, input_html: {autocomplete: "off", value: f.object.check_out_date.strftime("%d %B %Y")}
+          f.input :extension_charges
+          h3 'Add Payments'
+          f.has_many :payments, heading: false, allow_remove: false do |payment|
+            if payment.object.payment_type == "other" or payment.object.id == nil
+              payment.input :payment_mode, label: 'Payment Mode'
+              payment.input :amount, label: 'Payment Amount'
+              payment.input :payment_type, :input_html => {value: 'other'}, as: :hidden
+            end
+          end
         end
       end
       actions
@@ -97,12 +141,18 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
         row :customer
         row :checked_in_time
         row :checked_out_time
-        row :advance_payment
-        row :advance_payment_mode
         row :room_charges
-        row :total_room_price
+        row :extension_charges
+        row :total_room_charges
         row :total_menu_price
         row :total_price
+        row :advance_payment
+        row :additional_payment_amount
+        row :food_payment
+        row :pending_room_charges
+        row :pending_food_charges
+        row :total_pending_charges
+        row :checkin_receipt_printed, id: 'checkin_receipt_printed'
       end
     end
   

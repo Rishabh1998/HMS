@@ -12,24 +12,34 @@
 @import 'activeadmin_addons/all';
 @import "arctic_admin/base";
 
-.col{
-  font-size: 16px;
+
+.edit_link {
+  font-size: 0;
 }
 
-input[type='checkbox'] {
-  background: red;
-  padding: 10px;
+.edit_link:after {
+    font-size: 16px;
+    content: 'Update';
+}
+
+.col{
+  font-size: 16px;
 }
 
 input[type='checkbox']:checked {
   background: green;
   padding: 10px;
 }
+ol > li.has_many_container.payments > fieldset > ol > li > .has_many_remove{
+  display: none;
+}
+// ol:has(li[id*="payments_attributes"]) > li {
+//   display: none;
+// }
 
-
-#new_customer > fieldset.inputs > ol > li.has_many_container.bookings > fieldset > ol > li:nth-child(7) > a {
+#new_customer > fieldset.inputs > ol > li.has_many_container.bookings > fieldset > ol > li:nth-child(6) > a {
     display: none;
-  }
+}
 
 #room_status_ready{
   background-color: #4a9c4a;

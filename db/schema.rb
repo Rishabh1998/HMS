@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_07_31_155116) do
+ActiveRecord::Schema.define(version: 2021_08_19_155702) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -95,14 +95,15 @@ ActiveRecord::Schema.define(version: 2021_07_31_155116) do
     t.datetime "check_in_date"
     t.datetime "check_out_date"
     t.integer "status", default: 1
-    t.integer "payment_status", default: 1
-    t.decimal "room_price_per_day", precision: 10, scale: 2
+    t.decimal "room_charges", precision: 10, scale: 2
     t.integer "customer_id"
     t.datetime "checked_in_time"
     t.datetime "checked_out_time"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.decimal "advance_payment", precision: 10, scale: 2
+    t.decimal "extension_charges", precision: 10, scale: 2, default: "0.0"
+    t.boolean "checkin_receipt_printed", default: false
+    t.boolean "checkout_receipt_printed", default: false
   end
 
   create_table "customers", force: :cascade do |t|
@@ -113,8 +114,30 @@ ActiveRecord::Schema.define(version: 2021_07_31_155116) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "delayed_jobs", force: :cascade do |t|
+    t.integer "priority", default: 0, null: false
+    t.integer "attempts", default: 0, null: false
+    t.text "handler", null: false
+    t.text "last_error"
+    t.datetime "run_at"
+    t.datetime "locked_at"
+    t.datetime "failed_at"
+    t.string "locked_by"
+    t.string "queue"
+    t.datetime "created_at", precision: 6
+    t.datetime "updated_at", precision: 6
+    t.index ["priority", "run_at"], name: "delayed_jobs_priority"
+  end
+
   create_table "guests", force: :cascade do |t|
     t.string "name"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "inventories", force: :cascade do |t|
+    t.string "name"
+    t.integer "quantity", default: 0
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
@@ -133,6 +156,17 @@ ActiveRecord::Schema.define(version: 2021_07_31_155116) do
     t.integer "menu_category_id"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.integer "payment_mode", default: 1
+    t.string "objectable_type", null: false
+    t.bigint "objectable_id", null: false
+    t.integer "payment_type", default: 1
+    t.decimal "amount", precision: 10, scale: 2
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["objectable_type", "objectable_id"], name: "index_payments_on_objectable"
   end
 
   create_table "permissions", force: :cascade do |t|

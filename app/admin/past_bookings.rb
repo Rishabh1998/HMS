@@ -2,7 +2,7 @@ ActiveAdmin.register Booking, as: 'Checkout' do
 
     permit_params :status, :room_charges, :check_out_date, :check_in_date, room_ids: []
     
-    actions :all, except: [:new, :destroy]
+    actions :all, except: [:new, :destroy, :edit]
     menu :parent => "Bookings", :priority => 2
 
     member_action :no_show, method: :put do
@@ -80,12 +80,19 @@ ActiveAdmin.register Booking, as: 'Checkout' do
         row :customer
         row :checked_in_time
         row :checked_out_time
-        row :advance_payment
-        row :advance_payment_mode
         row :room_charges
-        row :total_room_price
+        row :extension_charges
+        row :total_room_charges
         row :total_menu_price
         row :total_price
+        row :advance_payment
+        row :additional_payment_amount
+        row :food_payment
+        row :pending_room_charges
+        row :pending_food_charges
+        row :total_pending_charges
+        row :checkin_receipt_printed, id: 'checkin_receipt_printed'
+        row :checkout_receipt_printed, id: 'checkout_receipt_printed'
       end
     end
   

@@ -9,4 +9,10 @@ class RoomPicture < ApplicationRecord
     validates_presence_of :laundry
 
     has_many_attached :additional_images, :dependent => :destroy
+
+    after_create :cleanup_job
+
+    def cleanup_job
+        self.destroy if self.verified
+    end
 end
