@@ -15,7 +15,64 @@
 #new_customer > fieldset.inputs > ol > li.has_many_container.bookings > fieldset > ol > li:nth-child(6) > a {
     display: none;
   }
-// Overriding any non-variable Sass must be done after the fact.
-// For example, to change the default status-tag color:
-//
-//   .status_tag { background: #6090DB; }
+
+#room_status_ready{
+  background-color: #4a9c4a;
+}
+
+#room_status_occupied{
+  background-color: #4968be;
+}
+
+#room_status_need_cleaning{
+  background-color: #afa844;
+}
+
+#room_status_verification{
+  background-color: #d44f27;
+}
+
+.button {
+  position: relative;
+  border: none;
+  font-size: 20px;
+  color: #FFFFFF;
+  width: 100px;
+  text-align: center;
+  transition-duration: 0.4s;
+  text-decoration: none;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.button-false {
+  background-color: #4f8a4f;
+}
+
+.button-true {
+  background-color: #9b5652;
+}
+
+.width-200px {
+  width: 171px;
+}
+
+.button:after {
+  content: "";
+  background: #f1f1f1;
+  display: block;
+  position: absolute;
+  padding-top: 300%;
+  padding-left: 350%;
+  margin-left: -20px !important;
+  margin-top: -120%;
+  opacity: 0;
+  transition: all 0.8s
+}
+
+.button:active:after {
+  padding: 0;
+  margin: 0;
+  opacity: 1;
+  transition: 0s
+}

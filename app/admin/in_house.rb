@@ -1,10 +1,9 @@
-ActiveAdmin.register Booking, as: 'Bookings' do
+ActiveAdmin.register Booking, as: 'In House Guests' do
 
     permit_params :status, :room_price_per_day, :check_out_date, :check_in_date, :payment_status, room_ids: [], menu_ids: [], booking_menus_attributes: [:id, :menu_id]
-
-    actions :all, except: [:destroy]
+    
+    actions :all, except: [:destroy, :new]
     menu :parent => "Bookings", :priority => 1
-
 
     member_action :no_show, method: :put do
       Booking.find(params[:id]).update(status: 'no_show')
@@ -14,25 +13,21 @@ ActiveAdmin.register Booking, as: 'Bookings' do
     controller do
       before_action :cleanup, only: :index
 
-      def new
-        redirect_to new_admin_customer_path
+      def update
+        resource.update(params["booking"].permit(:status, :payment_status, room_ids: [], booking_menus_attributes: [:id, :menu_id]))
+        if resource.status == "checkout"
+          redirect_to admin_checkout_path(params[:id])
+        else
+          redirect_to admin_in_house_guest_path(params[:id])
+        end
       end
 
       def cleanup
         Booking.where(check_in_date: nil).delete_all
       end
       
-      def update
-        resource.update(params["booking"].permit(:status, :room_price_per_day, :check_out_date, :check_in_date, :payment_status, room_ids: [], booking_menus_attributes: [:id, :menu_id]))
-        if resource.status == 'checkin'
-          redirect_to admin_in_house_guest_path(params[:id])
-        else
-          redirect_to admin_booking_path(params[:id])
-        end
-      end
-
       def scoped_collection
-        super.booked
+        super.checkin
       end
     end
 
@@ -54,10 +49,7 @@ ActiveAdmin.register Booking, as: 'Bookings' do
       column :room_price_per_day
   
       column :actions do |object|
-        object.status_before_type_cast < 3 ? (link_to "#{Booking.statuses.key(object.status_before_type_cast + 1).humanize}", edit_admin_booking_path(object, status: Booking.statuses.key(object.status_before_type_cast + 1)), {:class=>"button button-true" }) : ""
-      end
-      column "" do |object|
-        object.status_before_type_cast < 2 ? (link_to "Mark as No Show", no_show_admin_booking_path(object), {method: :put, :class=>"button button-false width-200px" }) : ""
+        object.status_before_type_cast < 3 ? (link_to "#{Booking.statuses.key(object.status_before_type_cast + 1).humanize}", edit_admin_in_house_guest_path(object, status: Booking.statuses.key(object.status_before_type_cast + 1)), {:class=>"button button-true" }) : ""
       end
       actions
     end
