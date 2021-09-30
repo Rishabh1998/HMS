@@ -12,9 +12,7 @@ ActiveAdmin.register Customer, as: 'Customer' do
 
       private
       def customer_params
-
         params["customer"].permit(:email, :phone_number, :name, :image, bookings_attributes: [:id, :check_in_date, :check_out_date, :room_charges, room_ids: [], booking_guest_ids: [], guests_attributes: [:id, :name, :image], payments_attributes: [:id, :payment_mode, :payment_type, :amount]])
-
       end
     end
 
@@ -43,7 +41,7 @@ ActiveAdmin.register Customer, as: 'Customer' do
         f.input :phone_number, label: 'Phone Number'
         # f.input :image, label: "Id proof", :as => :file, :hint => f.object.image.present? ? image_tag(rails_blob_url(f.object.image), :size => 150) : ""
 
-          f.input :image, label: "Id proof", as: :file, :hint => f.object.image.present? ?  image_tag(f.object.image.url, style: "width: 350px")  : ''
+          f.input :image, as: :file, :hint => f.object.image.present? ?  image_tag(f.object.image.url, style: "width: 350px")  : ''
         f.object.bookings << Booking.new
         object_booking = f.object.bookings.last
         old_guests = f.object.guests
@@ -78,10 +76,8 @@ ActiveAdmin.register Customer, as: 'Customer' do
         row :phone_number
         row :email
         row 'Id Proof' do 
-
           #object.image.present? ? image_tag(rails_blob_url(object.image), :size => 150) : ""
           object.image.present? ?  image_tag(object.image.url, style: "width: 350px")  : ''
-
         end
         if object.guests.present?
           div class: 'guests' do 
@@ -95,9 +91,7 @@ ActiveAdmin.register Customer, as: 'Customer' do
               object.guests.each do |guest|
                   tr do 
                     td guest.name
-
                     td guest.image.present? ? image_tag(guest.image.url, style: "width: 350px")  : ''
-
                   end
               end
             end

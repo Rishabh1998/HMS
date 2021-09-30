@@ -32,11 +32,11 @@
         </tr>
     	<tr>
         	<td class="key">Check in Date: <td>
-            <td class="value"> <%= booking.checked_in_time.strftime("%d %b %y %H:%M")%> <td>
+            <td class="value"> <%= booking&.checked_in_time&.strftime("%d %b %y %H:%M")%> <td>
         </tr>
         <tr>
         	<td class="key">Check out Date: <td>
-            <td class="value"> <%= booking.check_out_date.strftime("%d %b %y")%> <td>
+            <td class="value"> <%= booking&.check_out_date&.strftime("%d %b %y")%> <td>
         </tr>
         <tr>
         	<td class="key">Room Charges: <td>
@@ -89,11 +89,11 @@
         </tr>
     	<tr>
         	<td class="key">Check in Date: <td>
-            <td class="value"> <%= booking.checked_in_time.strftime("%d %b %y %H:%M")%> <td>
+            <td class="value"> <%= booking&.checked_in_time&.strftime("%d %b %y %H:%M")%> <td>
         </tr>
         <tr>
         	<td class="key">Check out Date: <td>
-            <td class="value"> <%= booking.check_out_date.strftime("%d %b %y")%> <td>
+            <td class="value"> <%= booking&.check_out_date&.strftime("%d %b %y")%> <td>
         </tr>
         <tr>
         	<td class="key">Room Charges: <td>

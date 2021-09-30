@@ -22,11 +22,19 @@ default: &default
 
 development:
   <<: *default
-  username: postgres
-  password: postgres
+  username: downtownstays
+  password: Shubham123.@
   host: localhost
   port: 5432
-  database: hms_development
+  database: hms_development_dev
+
+production:
+  <<: *default
+  username: downtownstays
+  password: Shubham123.@
+  host: localhost
+  port: 5432
+  database: hms_prod
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.
@@ -80,10 +88,10 @@ development:
 # for a full overview on how database connection configuration can be specified.
 #
 
-staging:
- <<: *default
- url: postgres://hdxhryipawqqeq:af92a024dd18ab27738b86edd88f27af6653964a96ceed13e9b7506619a3830d@ec2-184-73-198-174.compute-1.amazonaws.com:5432/db1padjo7k00ps
+#staging:
+# <<: *default
+# url: postgres://hdxhryipawqqeq:af92a024dd18ab27738b86edd88f27af6653964a96ceed13e9b7506619a3830d@ec2-184-73-198-174.compute-1.amazonaws.com:5432/db1padjo7k00ps
 
-production:
-  <<: *default
-  url: postgres://hdxhryipawqqeq:af92a024dd18ab27738b86edd88f27af6653964a96ceed13e9b7506619a3830d@ec2-184-73-198-174.compute-1.amazonaws.com:5432/db1padjo7k00ps
+#production:
+#  <<: *default
+#  url: postgres://hdxhryipawqqeq:af92a024dd18ab27738b86edd88f27af6653964a96ceed13e9b7506619a3830d@ec2-184-73-198-174.compute-1.amazonaws.com:5432/db1padjo7k00ps

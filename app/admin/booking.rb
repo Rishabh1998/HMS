@@ -1,7 +1,6 @@
 ActiveAdmin.register Booking, as: 'Bookings' do
 
-
-    permit_params :status, :room_charges, :room_type, :booking_type, :stay_during, :check_out_date, :check_in_date, room_ids: [], menu_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, :quantity, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]
+    permit_params :status, :room_charges, :room_type, :booking_type, :stay_during, :check_out_date, :check_in_date, room_ids: [], menu_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]
 
     actions :all, except: [:destroy]
     menu :parent => "Bookings", :priority => 1
@@ -56,9 +55,7 @@ ActiveAdmin.register Booking, as: 'Bookings' do
       end
       
       def update
-
-        resource.update(params["booking"].permit(:status, :room_charges, :room_type, :booking_type, :stay_during, :check_out_date, :check_in_date, room_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, :quantity, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]))
-
+        resource.update(params["booking"].permit(:status, :room_charges, :room_type, :booking_type, :stay_during, :check_out_date, :check_in_date, room_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]))
         if resource.status == 'checkin'
           pdf = render_to_string pdf: "receipt"+resource.id.to_s, template: "admin/booking/checkin_receipt.pdf.erb", page_height: '210', page_width: '58', margin:  {top: 10, bottom: 0, left: 3, right: 0}, encoding: "UTF-8"
 
@@ -82,17 +79,6 @@ ActiveAdmin.register Booking, as: 'Bookings' do
       def scoped_collection
         super.booked
       end
-
-      def edit
-        redirect_to admin_in_house_guest_path(params[:id]) if Booking.find(params[:id]).status == "checkin"
-        redirect_to admin_checkout_path(params[:id]) if Booking.find(params[:id]).status == "checkout"
-      end
-
-      def show
-        redirect_to admin_in_house_guest_path(params[:id]) if Booking.find(params[:id]).status == "checkin"
-        redirect_to admin_checkout_path(params[:id]) if Booking.find(params[:id]).status == "checkout"
-      end
-
     end
 
     index do
@@ -142,13 +128,9 @@ ActiveAdmin.register Booking, as: 'Bookings' do
           end
         f.has_many :booking_menus do |menu|
           menu.input :menu_id, as: :select, :collection => Menu.all.collect{|m| [m.name, m.id]}
-
-          menu.input :quantity, :input_html => {disabled: menu.object.id.present?}
           menu.object.payments << Payment.new(payment_type: 'food') if menu.object.payments.empty?
           menu.has_many :payments, heading: false, allow_remove: false, new_record: false do |payment|
             payment.input :payment_mode
-            payment.input :payment_type, :input_html => {value: 'food'}, as: :hidden
-
               # payment.input :amount, label: 'Advance Payment'
           end
         end
@@ -165,7 +147,7 @@ ActiveAdmin.register Booking, as: 'Bookings' do
         row :checked_in_time
         row :checked_out_time
         row :room_charges
-        row :total_room_charges
+        row :total_room_price
         row :total_menu_price
         row :total_price
         row :booking_type

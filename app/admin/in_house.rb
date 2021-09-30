@@ -59,17 +59,18 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
       column :id
       column :customer
       column :check_in_date do |object|
-        object.check_in_date.strftime("%d %B %Y") unless object.check_in_date.nil?
+        object.checked_in_time&.strftime("%d %B %Y - %I:%M %p") unless object.checked_in_time.nil?
       end
       column :check_out_date do |object|
-        object.check_out_date.strftime("%d %B %Y") unless object.check_out_date.nil?
+        object.check_out_date&.strftime("%d %B %Y") unless object.check_out_date.nil?
       end
       column :status
       column :rooms do |object|
         object.rooms.pluck(:number)
       end
       column :room_charges
-  
+      column :booking_type 
+      column :room_type
       column :actions do |object|
         object.status_before_type_cast < 3 ? (link_to "#{Booking.statuses.key(object.status_before_type_cast + 1).humanize}", edit_admin_in_house_guest_path(object, status: Booking.statuses.key(object.status_before_type_cast + 1)), {:class=>"button button-true" }) : ""
       end
@@ -78,6 +79,8 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
   
     filter :check_in_date
     filter :status
+    filter :booking_type
+    filter :room_type
     filter :room
     filter :customer
 
@@ -86,7 +89,7 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
         ready_rooms = Room.ready
         rooms = ready_rooms.or(Room.where(id: f.object.room_ids))
         f.input :status, :input_html => { :id => "booking_status" }
-        f.input :room_ids, label: 'Allot Rooms', as: :select, :collection => rooms.collect {|room| [room.number, room.id] }, multiple: true
+        f.input :room_ids, label: 'Allot Rooms', as: :select, :collection => rooms.collect {|room| [room.number, room.id] }, multiple: true, :input_html => {disabled: true}
         f.has_many :booking_menus, new_record: params["status"] != "checkout" do |menu|
           if params["status"] != 'checkout'
             menu.input :menu_id, as: :select, :collection => Menu.all.collect{|m| [m.name, m.id]}
@@ -118,7 +121,7 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
             end
           end
         else 
-          f.input :check_out_date, label: 'Extend Current Checkout Date', as: :datepicker, input_html: {autocomplete: "off", value: f.object.check_out_date.strftime("%d %B %Y")}
+          f.input :check_out_date, label: 'Extend Current Checkout Date', as: :datepicker, input_html: {autocomplete: "off", value: f.object&.check_out_date&.strftime("%d %B %Y")}
           f.input :extension_charges
           h3 'Add Payments'
           f.has_many :payments, heading: false, allow_remove: false do |payment|
@@ -138,6 +141,9 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
         row :check_in_date
         row :check_out_date
         row :status
+        row :room_type
+        row :booking_type
+        row :stay_during
         row :customer
         row :checked_in_time
         row :checked_out_time
@@ -153,6 +159,31 @@ ActiveAdmin.register Booking, as: 'In House Guests' do
         row :pending_food_charges
         row :total_pending_charges
         row :checkin_receipt_printed, id: 'checkin_receipt_printed'
+        row :rooms do |object|
+          object.rooms.pluck(:number)
+        end
+        if object.guests.present?
+          div class: 'guests' do 
+            h3 'Guests'
+            div class: 'guests_table' do 
+              table class: 'table' do 
+                tr do
+                  th 'Name'
+                  th 'ID Proof'
+                end
+                  td object.customer.name
+                  td object.customer.image.present? ? image_tag(object.customer.image.url, style: "width: 350px"): ""
+                object.guests.each do |guest|
+                    tr do
+                      td guest.name
+                      td guest.image.present? ? image_tag(guest.image.url, style: "width: 350px")  : ''
+                    end
+                end
+            end
+          end
+        end
+      end
+
       end
     end
   
