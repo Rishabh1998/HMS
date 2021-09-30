@@ -2,6 +2,9 @@ class Booking < ApplicationRecord
 
     enum status: {'booked': 1, 'checkin': 2, 'checkout': 3, 'no_show': 4}
     # enum advance_payment_mode: {'unpaid': 1, 'google_pay': 2, 'phonepe': 3, 'card': 4, 'cash': 5, 'oyo_paid': 6}
+    enum room_type: {'ac': 1, 'non_ac': 2}
+    enum stay_during: {'day': 1, 'night': 2}
+    enum booking_type: {'walkin': 1, 'oyo': 2}
 
     belongs_to :customer
     has_many :booking_rooms
@@ -28,7 +31,7 @@ class Booking < ApplicationRecord
 
     def reduce_inventory
         soaps = Inventory.find_by(name: 'Soaps')
-        soaps.update(quantity: soaps.quantity - 1) unless soaps.nil?
+        soaps.update(quantity: soaps.quantity - 1) unless soaps.nil? or self.checkout_receipt_printed
     end
 
     def change_room_status
@@ -48,7 +51,7 @@ class Booking < ApplicationRecord
     end
 
     def total_room_charges
-        self&.room_charges + self&.extension_charges
+        (self&.room_charges || 0) + (self&.extension_charges || 0)
     end
 
     def total_price
@@ -76,7 +79,7 @@ class Booking < ApplicationRecord
         self.booking_menus.each do |booking_menu|
             total += booking_menu.payments.where.not(payment_mode: 'unpaid')&.sum(:amount)
         end
-        total
+        total - self.checkout_food_payment
     end
 
     def pending_room_charges
@@ -97,8 +100,10 @@ class Booking < ApplicationRecord
 
     def checkout_food_payment
         amount = 0
-        self.booking_menus.each do |booking_menu|
-            amount += booking_menu.payments.where('? > updated_at and ? < updated_at', self.updated_at + 2.minute, self.updated_at - 2.minute)&.sum(:amount)
+        if self.status == "checkout"
+            self.booking_menus.each do |booking_menu|
+                amount += booking_menu.payments.where('? > updated_at and ? < updated_at', self.updated_at + 2.minute, self.updated_at - 2.minute)&.sum(:amount)
+            end
         end
         amount
     end

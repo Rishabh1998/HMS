@@ -5,9 +5,10 @@ class Customer < ApplicationRecord
 
     validates_uniqueness_of :phone_number
 
-    has_one_attached :image, :dependent => :destroy
-
+    # has_many :images, as: :imageable, :dependent => :destroy
+    mount_uploader :image, ImageUploader
     accepts_nested_attributes_for :bookings, allow_destroy: false
+    # accepts_nested_attributes_for :images, allow_destroy: false
 
     after_update :cleanup
 

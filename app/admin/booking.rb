@@ -1,6 +1,6 @@
 ActiveAdmin.register Booking, as: 'Bookings' do
 
-    permit_params :status, :room_charges, :check_out_date, :check_in_date, room_ids: [], menu_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]
+    permit_params :status, :room_charges, :room_type, :booking_type, :stay_during, :check_out_date, :check_in_date, room_ids: [], menu_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]
 
     actions :all, except: [:destroy]
     menu :parent => "Bookings", :priority => 1
@@ -55,7 +55,7 @@ ActiveAdmin.register Booking, as: 'Bookings' do
       end
       
       def update
-        resource.update(params["booking"].permit(:status, :room_charges, :check_out_date, :check_in_date, room_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]))
+        resource.update(params["booking"].permit(:status, :room_charges, :room_type, :booking_type, :stay_during, :check_out_date, :check_in_date, room_ids: [], payments_attributes: [:id, :payment_mode, :payment_type, :amount], booking_menus_attributes: [:id, :menu_id, payments_attributes: [:id, :payment_mode, :payment_type, :amount]]))
         if resource.status == 'checkin'
           pdf = render_to_string pdf: "receipt"+resource.id.to_s, template: "admin/booking/checkin_receipt.pdf.erb", page_height: '210', page_width: '58', margin:  {top: 10, bottom: 0, left: 3, right: 0}, encoding: "UTF-8"
 
@@ -86,10 +86,10 @@ ActiveAdmin.register Booking, as: 'Bookings' do
       column :id
       column :customer
       column :check_in_date do |object|
-        object.check_in_date.strftime("%d %B %Y") unless object.check_in_date.nil?
+        object.check_in_date&.strftime("%d %B %Y") unless object.check_in_date.nil?
       end
       column :check_out_date do |object|
-        object.check_out_date.strftime("%d %B %Y") unless object.check_out_date.nil?
+        object.check_out_date&.strftime("%d %B %Y") unless object.check_out_date.nil?
       end
       column :status
       column :rooms do |object|
@@ -99,6 +99,8 @@ ActiveAdmin.register Booking, as: 'Bookings' do
       column :actions do |object|
         object.status_before_type_cast < 3 ? (link_to "#{Booking.statuses.key(object.status_before_type_cast + 1).humanize}", edit_admin_booking_path(object, status: Booking.statuses.key(object.status_before_type_cast + 1)), {:class=>"button button-true" }) : ""
       end
+      column :booking_type
+      column :room_type
       column "" do |object|
         object.status_before_type_cast < 2 ? (link_to "Mark as No Show", no_show_admin_booking_path(object), {method: :put, :class=>"button button-false width-200px" }) : ""
       end
@@ -115,6 +117,9 @@ ActiveAdmin.register Booking, as: 'Bookings' do
         ready_rooms = Room.ready
         rooms = ready_rooms.or(Room.where(id: f.object.room_ids))
         f.input :status, :input_html => { :id => "booking_status" }
+        f.input :room_type
+        f.input :booking_type
+        f.input :stay_during
         f.input :room_ids, label: 'Allot Rooms', as: :select, :collection => rooms.collect {|room| [room.number, room.id] }, multiple: true
         f.object.payments << Payment.new(payment_type: 'advance') if f.object.payments.empty?
           f.has_many :payments, new_record: false do |payment|
@@ -145,8 +150,32 @@ ActiveAdmin.register Booking, as: 'Bookings' do
         row :total_room_price
         row :total_menu_price
         row :total_price
+        row :booking_type
+        row :room_type
+
+        if object.guests.present?
+          div class: 'guests' do 
+            h3 'Guests'
+            div class: 'guests_table' do 
+              table class: 'table' do 
+                tr do
+                  th 'Name'
+                  th 'ID Proof'
+                end
+                td object.customer.name
+                td object.customer.image.present? ? image_tag(object.customer.image.url, style: "width: 350px"): ""
+              object.guests.each do |guest|
+                  tr do
+                    td guest.name
+                    td guest.image.present? ? image_tag(guest.image.url, style: "width: 350px")  : ''
+                  end
+              end
+            end
+          end
+        end
       end
+      
     end
-  
   end
+end
   

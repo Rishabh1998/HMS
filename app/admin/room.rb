@@ -1,6 +1,6 @@
 ActiveAdmin.register Room, as: 'Room' do
 
-    actions :all, except: [:show, :destroy]
+    actions :all, except: [:destroy]
 
     permit_params :number, :status, :description, room_pictures_attributes: [:id, :washroom_image, :room_image, :laundry, :verified]
 
@@ -19,6 +19,17 @@ ActiveAdmin.register Room, as: 'Room' do
     action_item only: :index do
       link_to 'Rooms', admin_rooms_path, class: 'custom_buttons button blue'
     end
+
+    controller do 
+
+      def update
+        resource.update(permitted_params["room"])
+        redirect_to collection_url
+      end
+
+    end
+
+    
     
     index do |object|
       selectable_column
@@ -41,19 +52,55 @@ ActiveAdmin.register Room, as: 'Room' do
         f.input :number
         f.input :status
         f.input :description
-        f.object.room_pictures << RoomPicture.new if f.object.room_pictures.where(verified: false).empty?
-        f.has_many :room_pictures, id: "room_pictures#{current_admin_user.role.name == "Admin"? "admin" : ""}" do |room_picture|
-          if room_picture.object.verified == false
-            room_picture.input :washroom_image, :as => :file, :hint => room_picture.object.washroom_image.present? ? image_tag(rails_blob_url(room_picture.object.washroom_image), :size => 150) : "", :input_html => {accept: "image/*", capture: '', id: 'washroom_image'}, required: true
-            room_picture.input :room_image, :as => :file, :hint => room_picture.object.room_image.present? ? image_tag(rails_blob_url(room_picture.object.room_image), :size => 150) : "", :input_html => {accept: "image/*", capture: '', id: 'room_image'}, required: true
-            room_picture.input :laundry, :as => :file, :hint => room_picture.object.laundry.present? ? image_tag(rails_blob_url(room_picture.object.laundry), :size => 150) : "", :input_html => {accept: "image/*", capture: '', id: 'laundry'}, required: true
-            if current_admin_user.role.name == "Admin" || current_admin_user.role.name == "admin"
-              room_picture.input :verified, :input_html => {id: 'verified'}
+        f.object.room_pictures << RoomPicture.new if f.object.status == "need_cleaning" and f.object.room_pictures.where(verified: false).empty?
+        if !f.object.room_pictures.where(verified: false).empty?
+          f.has_many :room_pictures, id: "room_pictures#{current_admin_user.role.name == "Admin"? "admin" : ""}" do |room_picture|
+            if room_picture.object.verified == false
+              room_picture.input :washroom_image, :as => :file, :hint => room_picture.object.washroom_image.present? ?  image_tag(room_picture.object.washroom_image.url, style: "width: 350px")  : '', :input_html => {accept: "image/*", capture: '', id: 'washroom_image'}, required: true
+              room_picture.input :room_image, :as => :file, :hint => room_picture.object.room_image.present? ?  image_tag(room_picture.object.room_image.url, style: "width: 350px")  : '', :input_html => {accept: "image/*", capture: '', id: 'room_image'}, required: true
+              room_picture.input :laundry, :as => :file, :hint => room_picture.object.laundry.present? ?  image_tag(room_picture.object.laundry.url, style: "width: 350px")  : '', :input_html => {accept: "image/*", capture: '', id: 'laundry'}, required: true
+              if current_admin_user.role.name == "Admin" || current_admin_user.role.name == "admin" || current_admin_user.role.name == "Front Office"
+                room_picture.input :verified, :input_html => {id: 'verified'}
+              end
             end
           end
         end
       end
       actions
+    end
+
+    show do |object|
+      attributes_table do
+        row :number
+        row :status
+        row :description
+        
+        if object.room_pictures.present?
+          div class: 'Room Pictures' do 
+            h3 'Room Pictures'
+            div class: 'room_pictures_table' do 
+              table class: 'table' do 
+                tr do
+                  th 'Washroom Image'
+                  th 'Room Image'
+                  th 'Laundry Image'
+                  th 'Verified'
+                end
+              object.room_pictures.each do |picture|
+                  picture.destroy if picture.created_at < 24.hours.ago or (picture.washroom_image.url == nil and picture.room_image.url == nil and picture.laundry.url == nil)
+                  tr do
+                    td picture.washroom_image.present? ? image_tag(picture.washroom_image.url, style: "width: 350px")  : ''
+                    td picture.room_image.present? ? image_tag(picture.room_image.url, style: "width: 350px")  : ''
+                    td picture.laundry.present? ? image_tag(picture.laundry.url, style: "width: 350px")  : ''
+                    td picture.verified.to_s
+                  end
+              end
+            end
+          end
+        end
+      end
+
+      end
     end
   
   end

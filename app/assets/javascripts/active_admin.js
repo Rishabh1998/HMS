@@ -30,7 +30,7 @@ $( document ).ready(function() {
             var selects = document.getElementsByClassName('select2-selection__rendered');
             unpaid = true;
             for (let i = 0; i < selects.length; i++) { 
-                if (selects[i].childNodes[1].textContent == "Unpaid"){
+                if (selects[i].childNodes[1] != undefined && selects[i].childNodes[1].textContent == "Unpaid"){
                     selects[i].parentElement.style.border = "2px solid red";
                     unpaid = false;
                 }
@@ -72,15 +72,15 @@ $( document ).ready(function() {
     update_room = document.getElementById('room_submit_action');
     room_state = document.getElementById('select2-room_status-container')
     room_state_text = "";
-    if (room_state != null){
-        room_state_text = room_state.childNodes[1].textContent;
+    // if (room_state != null){
+    //     room_state_text = room_state.childNodes[1].textContent;
 
-        if (!window.mobileAndTabletCheck()){
-            room_pictures = document.getElementById('room_pictures');
-            if (room_pictures != null)
-                document.getElementsByClassName('room_pictures')[0].style.display = "none";
-        }
-    }
+    //     if (!window.mobileAndTabletCheck()){
+    //         room_pictures = document.getElementById('room_pictures');
+    //         if (room_pictures != null)
+    //             document.getElementsByClassName('room_pictures')[0].style.display = "none";
+    //     }
+    // }
     if (update_room != null && room_state_text != "Ready"){
         update_room.childNodes[0].setAttribute("disabled", "");
     }
